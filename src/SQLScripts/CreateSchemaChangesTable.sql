@@ -1,12 +1,12 @@
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE object_id = OBJECT_ID('dbo.SchemaChanges'))
 BEGIN
     CREATE TABLE [dbo].[SchemaChanges] (
-        [ID]                INT             IDENTITY (1, 1) PRIMARY KEY,
+        [ID]                INT             IDENTITY (1, 1),
         [ScriptName]        VARCHAR(255)    NOT NULL CONSTRAINT [UQ_ScriptName] UNIQUE,
         [AppliedAt]         DateTime        NOT NULL CONSTRAINT [DF_SchemaChanges_Applied] DEFAULT(SYSDATETIMEOFFSET()),
         [ModifiedAt]        DateTime        NOT NULL,
         [ModifiedBy]        VARCHAR(255)    NOT NULL,
-        CONSTRAINT [PK_SchemaChanges_ID] PRIMARY KEY CLUSTERED ([ID] ASC)
+        CONSTRAINT [PK_SchemaChanges_ID] PRIMARY KEY ([ID])
     )
 END
 
