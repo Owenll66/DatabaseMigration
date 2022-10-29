@@ -1,0 +1,3 @@
+{
+    "connectionString": "Data Source=.;Initial Catalog=Test;Integrated Security=True;Connect Timeout=30;Application Name=Database Migration"
+}
