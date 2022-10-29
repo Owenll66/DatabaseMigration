@@ -9,19 +9,23 @@ BEGIN
         CONSTRAINT [PK_SchemaChanges_ID] PRIMARY KEY ([ID])
     )
 END
+GO
 
 IF NOT EXISTS (SELECT * FROM sys.triggers WHERE object_id = OBJECT_ID(N'[TR_SchemaChanges_Update]'))
 BEGIN
-    CREATE TRIGGER [TR_SchemaChanges_Update]
-        ON [dbo].[SchemaChanges]
-        AFTER UPDATE
-    AS
-    BEGIN
-        UPDATE [dbo].[SchemaChanges]
-        SET
-            [ModifiedAt] = SYSDATETIMEOFFSET(),
-            [ModifiedBy] = SUSER_NAME()
-        FROM [dbo].[SchemaChanges]
-        WHERE [ID] in (SELECT [ID] FROM INSERTED)
-    END
+    EXECUTE (N'
+        CREATE TRIGGER [dbo].[TR_SchemaChanges_Update]
+            ON [dbo].[SchemaChanges]
+            AFTER UPDATE
+        AS
+        BEGIN
+            UPDATE [dbo].[SchemaChanges]
+            SET
+                [ModifiedAt] = SYSDATETIMEOFFSET(),
+                [ModifiedBy] = SUSER_NAME()
+            FROM [dbo].[SchemaChanges]
+            WHERE [ID] in (SELECT [ID] FROM INSERTED)
+        END
+    ')
 END
+GO
