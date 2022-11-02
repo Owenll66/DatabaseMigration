@@ -55,10 +55,9 @@ process
     function Set-Database([string]$DatabaseName)
     {
         # Create Database if not exist.
-        $result = Invoke-Sqlcmd -Query "
-            IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'$DatabaseName')
-                CREATE DATABASE [$DatabaseName]
-        "
+        $result = Invoke-Sqlcmd -ConnectionString $MigrationSettings.ConnectionString -Query
+        "IF NOT EXISTS (SELECT [name] FROM sys.databases WHERE [name] = N'$DatabaseName')
+                CREATE DATABASE [$DatabaseName]"
 
         Write-Host $result
     }
