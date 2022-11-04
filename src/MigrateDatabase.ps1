@@ -54,11 +54,12 @@ process
     # Create database if not exists.
     function Set-Database([string]$DatabaseName)
     {
-        $sql = "IF NOT EXISTS (SELECT [name] FROM sys.databases WHERE [name] = N'$DatabaseName')
-                CREATE DATABASE [$DatabaseName]"
+        $Parameters = "DatabaseName='$DatabaseName'"
+        $Sql = "IF NOT EXISTS (SELECT [name] FROM sys.databases WHERE [name] = `$(DatabaseName))
+                CREATE DATABASE `$(DatabaseName)"
 
         # Create Database if not exist.
-        $result = Invoke-Sqlcmd -ConnectionString $MigrationSettings.ConnectionString -Query $sql
+        $result = Invoke-Sqlcmd -ConnectionString $MigrationSettings.ConnectionString -Query $Sql -Variable $Parameters
 
         Write-Host $result
     }
