@@ -35,8 +35,18 @@ begin
     [string]$ServerInstance = $null;
     [string]$DatabaseName = $null;
 
-    Write-Host $DbStringBuilder.TryGetValue('data source', [ref]$ServerInstance);
-    $DbStringBuilder.TryGetValue('initial catalog', [ref]$DatabaseName);
+    $DbStringBuilder.TryGetValue('data source', [ref]$ServerInstance);
+
+    # Remove initial database from the connection string. Because the database
+    # may not exist and cause connection failure when calling Set-Database.
+    if ($DbStringBuilder.TryGetValue('initial catalog', [ref]$DatabaseName))
+    {
+        $DbStringBuilder.Remove('initial catalog')
+    }
+    elseif ($DbStringBuilder.TryGetValue('database', [ref]$DatabaseName))
+    {
+        $DbStringBuilder.Remove('database')
+    }
 
     $line = new-object System.String '-', ($Host.ui.RawUI.BufferSize.Width)
     Write-Host $line -ForegroundColor Green
@@ -54,12 +64,10 @@ process
     # Create database if not exists.
     function Set-Database([string]$DatabaseName)
     {
-        $Parameters = "DatabaseName='$DatabaseName'"
-        $Sql = "IF NOT EXISTS (SELECT [name] FROM sys.databases WHERE [name] = `$(DatabaseName))
-                CREATE DATABASE `$(DatabaseName)"
+        $Parameters = "DatabaseName=$DatabaseName"
 
         # Create Database if not exist.
-        $result = Invoke-Sqlcmd -ConnectionString $MigrationSettings.ConnectionString -Query $Sql -Variable $Parameters
+        $result = Invoke-Sqlcmd -ConnectionString $DbStringBuilder.ConnectionString -InputFile "$ScriptPath\CreateDbIfNotExists.sql" -Variable $Parameters
 
         Write-Host $result
     }
