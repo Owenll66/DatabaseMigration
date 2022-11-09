@@ -24,6 +24,7 @@ begin
         [DatabaseTypes]$DatabaseType
     }
 
+    
     $MigrationSettings = [MigrationSettings](Get-Content $SettingFilePath | Out-String | ConvertFrom-Json)
 
     $ScriptPath = Resolve-Path ".\Scripts\$($MigrationSettings.DatabaseType)"
@@ -57,34 +58,57 @@ begin
     Write-Host "Database Name      |    $($DatabaseName)" -ForegroundColor Green
     Write-Host $line -ForegroundColor Green
 
-    Write-Host "`n"
+    # Create database if not exists.
+    function Set-Database()
+    {
+        Write-Host "Updating database..."
+
+        $Parameters = "DatabaseName=$DatabaseName"
+
+        # Create Database if not exists.
+        Invoke-Sqlcmd -ConnectionString $DbStringBuilder.ConnectionString -InputFile "$ScriptPath\CreateDbIfNotExists.sql" -Variable $Parameters
+
+        Write-Host "Database '$DatabaseName' has been updated successfully."
+    }
+
+    # Drop database if not exists.
+    function Remove-Database()
+    {
+        Write-Host "Dropping database..."
+
+        $Parameters = "DatabaseName=$DatabaseName"
+        $Sql = "DROP DATABASE [`$(DatabaseName)]"
+
+        # Create Database if not exists.
+        Invoke-Sqlcmd -ConnectionString $DbStringBuilder.ConnectionString -Query $Sql -Variable $Parameters
+
+        Write-Host "Database '$DatabaseName' has been dropped successfully."
+    }
+
+    # Invoke database migration.
+    function Invoke-Migration()
+    {
+
+    }
 }
 process
 {
-    # Create database if not exists.
-    function Set-Database([string]$DatabaseName)
-    {
-        $Parameters = "DatabaseName=$DatabaseName"
-
-        # Create Database if not exist.
-        $result = Invoke-Sqlcmd -ConnectionString $DbStringBuilder.ConnectionString -InputFile "$ScriptPath\CreateDbIfNotExists.sql" -Variable $Parameters
-
-        Write-Host $result
-    }
-
     switch ($Option)
     {
         Update
         {
-            Set-Database $DatabaseName
+            Set-Database
+
+            Invoke-Migration
         }
         Drop
         {
-            Write-Host "Drop"
+            Remove-Database
         }
         ReCreate
         {
-            Write-Host "ReCreate"
+            Write-Host "ReCreating database..."
+            Set-Database $DatabaseName
         }
         default
         {
@@ -92,9 +116,7 @@ process
         }
     }
 
-    function Invoke-Migration()
-    {
-    }
+    
 }
 end {
     Pop-Location
